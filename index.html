@@ -153,7 +153,25 @@
 
           const title = document.createElement("div");
           title.className = "font-semibold text-sm mb-1 flex items-center justify-between";
-          title.innerHTML = `<span>${task.title}</span>`;
+
+          const left = document.createElement("div");
+          left.className = "flex items-center gap-1";
+
+          const dot = document.createElement("span");
+          dot.className = "h-1.5 w-1.5 rounded-full";
+          // priority: high (red), medium (amber), low (slate)
+          const pri = task.priority || "medium";
+          if (pri === "high") dot.classList.add("bg-red-400", "shadow-[0_0_8px_rgba(248,113,113,0.9)]");
+          else if (pri === "low") dot.classList.add("bg-slate-500");
+          else dot.classList.add("bg-amber-400", "shadow-[0_0_8px_rgba(251,191,36,0.9)]");
+
+          const titleText = document.createElement("span");
+          titleText.textContent = task.title;
+
+          left.appendChild(dot);
+          left.appendChild(titleText);
+
+          title.appendChild(left);
 
           const desc = document.createElement("p");
           desc.className = "text-xs text-slate-300";
@@ -231,7 +249,7 @@
         }
         const { data, error } = await supabase
           .from('kanban_tasks')
-          .select('id, slug, title, description, details, status')
+          .select('id, slug, title, description, details, status, priority')
           .order('created_at', { ascending: true });
         if (error) {
           console.error('Supabase error:', error.message);
@@ -242,7 +260,8 @@
             title: row.title,
             description: row.description,
             details: row.details,
-            column: row.status || 'todo'
+            column: row.status || 'todo',
+            priority: row.priority || 'medium'
           }));
         }
         render();
