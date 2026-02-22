@@ -12,42 +12,49 @@
         id: "gateway-fix",
         title: "Fix OpenClaw gateway / sub-agent pairing",
         description: "Diagnose and resolve gateway pairing error so sessions_spawn works reliably.",
+        details: "Run gateway status/doctor/logs, identify why sessions_spawn reports 'pairing required', and update config so sub-agents can be spawned reliably.",
         column: "todo"
       },
       {
         id: "supabase-setup",
         title: "Set up Supabase for knowledge + mood DB",
         description: "Create Supabase project, tables (book_chapters, mood_log, etc.), and local supabase-kb skill.",
+        details: "Design schema for chapters, critiques, mood_log, and kanban tasks; create project and tables in Supabase; store service key locally; build a small supabase-kb client skill.",
         column: "todo"
       },
       {
         id: "book-agent",
         title: "Implement book-writing agent",
         description: "Use BOOK_AGENT_PLAN.md to create the dedicated agent, cron jobs, and daily chapter workflow.",
+        details: "Create a dedicated book agent workspace, wire morning/midday/evening cron jobs, integrate mood + news inputs via Supabase, and ensure daily chapters are written, revised, and sent for review.",
         column: "todo"
       },
       {
         id: "tavily-setup",
         title: "Tavily search integration",
         description: "Store Tavily API key and add tavily-search skill as default web search backend.",
+        details: "Create a tavily-search skill that reads ~/.secrets/tavily.json and calls the Tavily API for web queries, then start using it as the default search backend instead of Brave.",
         column: "todo"
       },
       {
         id: "rapidapi-setup",
         title: "RapidAPI setup",
         description: "Create RapidAPI account, store key, add generic rapidapi skill + flight/news wrappers.",
+        details: "Create RapidAPI account in browser, subscribe to a flight and a news API, store the key in ~/.secrets/rapidapi.json, then implement a generic rapidapi client and task-specific wrappers.",
         column: "todo"
       },
       {
         id: "robotics-investing",
         title: "Robotics + agentic AI investing plan",
         description: "Design and (optionally) execute a small ~1000 € investment plan in robotics + agentic AI, with a core ETF and a few speculative names.",
+        details: "Research UCITS robotics/automation ETFs and a small set of individual robotics/AI names; split ~1000 € into a safer core+satellite structure that fits your risk tolerance.",
         column: "todo"
       },
       {
         id: "google-oauth-fix",
         title: "Fix Gmail/Drive OAuth integration",
         description: "Create a new stable Google Cloud OAuth client, update ~/.secrets/google-oauth.json, and re-test gmail_send/drive_upload scripts.",
+        details: "In Google Cloud Console, create a new Desktop OAuth client, re-run the local OAuth flow with correct scopes, update ~/.secrets/google-oauth.json, and validate google_token.js + gmail_send.js + drive_upload.js.",
         column: "todo"
       },
       {
@@ -93,6 +100,55 @@
         done: document.getElementById("col-done")
       };
 
+      const modal = document.getElementById("task-modal");
+      const modalTitle = document.getElementById("task-modal-title");
+      const modalBody = document.getElementById("task-modal-body");
+      const modalClose = document.getElementById("task-modal-close");
+
+      function openModal(task) {
+        modalTitle.textContent = task.title;
+        modalBody.innerHTML = "";
+
+        const desc = document.createElement("p");
+        desc.className = "mb-3 text-xs text-slate-200";
+        desc.textContent = task.description || "";
+        modalBody.appendChild(desc);
+
+        if (task.details) {
+          const details = document.createElement("p");
+          details.className = "mb-3 text-xs text-slate-300";
+          details.textContent = task.details;
+          modalBody.appendChild(details);
+        }
+
+        if (task.subtasks && task.subtasks.length) {
+          const h = document.createElement("h4");
+          h.className = "mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400";
+          h.textContent = "Subtasks";
+          modalBody.appendChild(h);
+
+          const ul = document.createElement("ul");
+          ul.className = "mb-2 space-y-1";
+          task.subtasks.forEach(st => {
+            const li = document.createElement("li");
+            li.className = "flex items-center text-[11px] text-slate-300";
+            li.innerHTML = `<span class=\"mr-1 h-1.5 w-1.5 rounded-full bg-indigo-400\"></span>${st.title}`;
+            ul.appendChild(li);
+          });
+          modalBody.appendChild(ul);
+        }
+
+        modal.classList.remove("hidden");
+      }
+
+      modalClose.addEventListener("click", () => {
+        modal.classList.add("hidden");
+      });
+
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.classList.add("hidden");
+      });
+
       function render() {
         Object.values(columns).forEach(col => (col.innerHTML = ""));
         tasks.forEach(task => {
@@ -133,6 +189,14 @@
           });
           card.addEventListener("dragend", () => {
             card.classList.remove("opacity-60");
+          });
+
+          // Open details modal on click
+          card.addEventListener("click", (e) => {
+            // Ignore clicks that start a drag selection
+            e.stopPropagation();
+            const t = tasks.find(t => t.id === task.id);
+            if (t) openModal(t);
           });
 
           const colEl = columns[task.column] || columns.todo;
@@ -201,6 +265,17 @@
       <h1 class="text-sm font-semibold tracking-wide text-slate-100">Kanban Board</h1>
     </div>
   </header>
+
+  <!-- Task details modal -->
+  <div id="task-modal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl">
+      <div class="mb-3 flex items-center justify-between">
+        <h3 id="task-modal-title" class="text-sm font-semibold text-slate-100"></h3>
+        <button id="task-modal-close" class="rounded-full border border-slate-600 px-2 py-0.5 text-[11px] text-slate-300 hover:border-slate-400">Close</button>
+      </div>
+      <div id="task-modal-body" class="text-xs text-slate-200"></div>
+    </div>
+  </div>
 
   <main class="mx-auto max-w-5xl px-4 pb-8 pt-4">
     <section class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
