@@ -98,7 +98,9 @@
         tasks.forEach(task => {
           const card = document.createElement("div");
           card.className =
-            "mb-3 rounded-xl border border-slate-700 bg-slate-900/80 p-3 shadow hover:border-indigo-500 cursor-pointer";
+            "mb-3 rounded-xl border border-slate-700 bg-slate-900/80 p-3 shadow hover:border-indigo-500 cursor-grab";
+          card.draggable = true;
+          card.dataset.taskId = task.id;
 
           const title = document.createElement("div");
           title.className = "font-semibold text-sm mb-1 flex items-center justify-between";
@@ -123,20 +125,43 @@
             card.appendChild(ul);
           }
 
-          card.addEventListener("click", () => {
-            // Cycle task column: todo -> doing -> done -> todo
-            const order = ["todo", "doing", "done"];
-            const idx = order.indexOf(task.column || "todo");
-            const next = order[(idx + 1) % order.length];
-            task.column = next;
-            saveTasks(tasks);
-            render();
+          // Drag & Drop handlers
+          card.addEventListener("dragstart", (e) => {
+            card.classList.add("opacity-60");
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", task.id);
+          });
+          card.addEventListener("dragend", () => {
+            card.classList.remove("opacity-60");
           });
 
           const colEl = columns[task.column] || columns.todo;
           colEl.appendChild(card);
         });
       }
+
+      // Enable drag & drop on columns
+      Object.entries(columns).forEach(([columnKey, colEl]) => {
+        colEl.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          colEl.classList.add("ring-1", "ring-indigo-500");
+        });
+        colEl.addEventListener("dragleave", () => {
+          colEl.classList.remove("ring-1", "ring-indigo-500");
+        });
+        colEl.addEventListener("drop", (e) => {
+          e.preventDefault();
+          colEl.classList.remove("ring-1", "ring-indigo-500");
+          const taskId = e.dataTransfer.getData("text/plain");
+          if (!taskId) return;
+          const t = tasks.find(t => t.id === taskId);
+          if (!t) return;
+          t.column = columnKey;
+          saveTasks(tasks);
+          render();
+        });
+      });
 
       // Basic add-task form
       const addForm = document.getElementById("add-task-form");
