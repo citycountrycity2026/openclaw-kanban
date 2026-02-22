@@ -277,22 +277,11 @@
   </div>
 
   <main class="mx-auto max-w-5xl px-4 pb-8 pt-4">
-    <section class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <section class="mb-4">
       <div>
         <h2 class="text-base font-semibold">Workspace tasks</h2>
-        <p class="text-xs text-slate-400">Read-only dashboard: columns reflect task status from Supabase (todo / doing / done).</p>
+        <p class="text-xs text-slate-400">Read-only dashboard: columns reflect task status from Supabase (todo / doing / done). To add or change tasks, tell the agent and it will update Supabase for you.</p>
       </div>
-      <form id="add-task-form" class="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900/70 p-3 text-xs md:flex-row md:items-end">
-        <div class="flex-1">
-          <label class="mb-1 block text-[11px] text-slate-400">New task</label>
-          <input id="add-task-title" type="text" class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none" placeholder="Title" />
-        </div>
-        <div class="flex-1">
-          <label class="mb-1 block text-[11px] text-slate-400">Description (optional)</label>
-          <input id="add-task-desc" type="text" class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none" placeholder="Short description" />
-        </div>
-        <button type="submit" class="mt-1 inline-flex items-center rounded-md bg-indigo-600 px-3 py-1 text-[11px] font-medium text-white hover:bg-indigo-500 md:mt-0">Add</button>
-      </form>
     </section>
 
     <section class="grid gap-3 md:grid-cols-3">
