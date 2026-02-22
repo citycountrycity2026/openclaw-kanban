@@ -232,8 +232,8 @@
           if (!taskId) return;
           const t = tasks.find(t => t.id === taskId);
           if (!t) return;
+          // Dragging is purely visual; Supabase remains the source of truth
           t.column = columnKey;
-          saveTasks(tasks);
           render();
         });
       });
