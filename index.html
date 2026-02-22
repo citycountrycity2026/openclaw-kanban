@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw Kanban</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Initial task data (can be edited in this file; user changes persist via localStorage per browser).
+    const INITIAL_TASKS = [
+      {
+        id: "gateway-fix",
+        title: "Fix OpenClaw gateway / sub-agent pairing",
+        description: "Diagnose and resolve gateway pairing error so sessions_spawn works reliably.",
+        column: "todo"
+      },
+      {
+        id: "supabase-setup",
+        title: "Set up Supabase for knowledge + mood DB",
+        description: "Create Supabase project, tables (book_chapters, mood_log, etc.), and local supabase-kb skill.",
+        column: "todo"
+      },
+      {
+        id: "book-agent",
+        title: "Implement book-writing agent",
+        description: "Use BOOK_AGENT_PLAN.md to create the dedicated agent, cron jobs, and daily chapter workflow.",
+        column: "todo"
+      },
+      {
+        id: "tavily-setup",
+        title: "Tavily search integration",
+        description: "Store Tavily API key and add tavily-search skill as default web search backend.",
+        column: "todo"
+      },
+      {
+        id: "rapidapi-setup",
+        title: "RapidAPI setup",
+        description: "Create RapidAPI account, store key, add generic rapidapi skill + flight/news wrappers.",
+        column: "todo"
+      },
+      {
+        id: "android-apps",
+        title: "Android apps pipeline",
+        description: "Plan and ship small Kotlin apps (timer, clipboard, dev tools, etc.) and publish to Google Play.",
+        column: "todo",
+        subtasks: [
+          {
+            id: "android-apps-planning",
+            title: "Define app ideas & select next project"
+          },
+          {
+            id: "android-apps-play-store",
+            title: "Set up Google Play Console and prepare publishing pipeline"
+          }
+        ]
+      }
+    ];
+
+    function loadTasks() {
+      try {
+        const stored = localStorage.getItem("openclaw-kanban-tasks");
+        if (!stored) return INITIAL_TASKS;
+        const parsed = JSON.parse(stored);
+        if (!Array.isArray(parsed)) return INITIAL_TASKS;
+        return parsed;
+      } catch {
+        return INITIAL_TASKS;
+      }
+    }
+
+    function saveTasks(tasks) {
+      localStorage.setItem("openclaw-kanban-tasks", JSON.stringify(tasks));
+    }
+
+    function setupKanban() {
+      let tasks = loadTasks();
+
+      const columns = {
+        todo: document.getElementById("col-todo"),
+        doing: document.getElementById("col-doing"),
+        done: document.getElementById("col-done")
+      };
+
+      function render() {
+        Object.values(columns).forEach(col => (col.innerHTML = ""));
+        tasks.forEach(task => {
+          const card = document.createElement("div");
+          card.className =
+            "mb-3 rounded-xl border border-slate-700 bg-slate-900/80 p-3 shadow hover:border-indigo-500 cursor-pointer";
+
+          const title = document.createElement("div");
+          title.className = "font-semibold text-sm mb-1 flex items-center justify-between";
+          title.innerHTML = `<span>${task.title}</span>`;
+
+          const desc = document.createElement("p");
+          desc.className = "text-xs text-slate-300";
+          desc.textContent = task.description || "";
+
+          card.appendChild(title);
+          card.appendChild(desc);
+
+          if (task.subtasks && task.subtasks.length) {
+            const ul = document.createElement("ul");
+            ul.className = "mt-2 space-y-1";
+            task.subtasks.forEach(st => {
+              const li = document.createElement("li");
+              li.className = "flex items-center text-[11px] text-slate-300";
+              li.innerHTML = `<span class=\"mr-1 h-1.5 w-1.5 rounded-full bg-indigo-400\"></span>${st.title}`;
+              ul.appendChild(li);
+            });
+            card.appendChild(ul);
+          }
+
+          card.addEventListener("click", () => {
+            // Cycle task column: todo -> doing -> done -> todo
+            const order = ["todo", "doing", "done"];
+            const idx = order.indexOf(task.column || "todo");
+            const next = order[(idx + 1) % order.length];
+            task.column = next;
+            saveTasks(tasks);
+            render();
+          });
+
+          const colEl = columns[task.column] || columns.todo;
+          colEl.appendChild(card);
+        });
+      }
+
+      // Basic add-task form
+      const addForm = document.getElementById("add-task-form");
+      const addTitle = document.getElementById("add-task-title");
+      const addDesc = document.getElementById("add-task-desc");
+
+      addForm.addEventListener("submit", e => {
+        e.preventDefault();
+        const title = addTitle.value.trim();
+        if (!title) return;
+        const desc = addDesc.value.trim();
+        tasks.push({
+          id: `task-${Date.now()}`,
+          title,
+          description: desc,
+          column: "todo"
+        });
+        addTitle.value = "";
+        addDesc.value = "";
+        saveTasks(tasks);
+        render();
+      });
+
+      render();
+    }
+
+    document.addEventListener("DOMContentLoaded", setupKanban);
+  </script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <header class="border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950/80">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      <div class="flex items-center gap-2">
+        <span class="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]"></span>
+        <span class="text-xs uppercase tracking-[0.2em] text-slate-400">OpenClaw</span>
+      </div>
+      <h1 class="text-sm font-semibold tracking-wide text-slate-100">Kanban Board</h1>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-5xl px-4 pb-8 pt-4">
+    <section class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-base font-semibold">Workspace tasks</h2>
+        <p class="text-xs text-slate-400">Click a card to move it between TODO → DOING → DONE. Tasks are saved locally in your browser.</p>
+      </div>
+      <form id="add-task-form" class="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900/70 p-3 text-xs md:flex-row md:items-end">
+        <div class="flex-1">
+          <label class="mb-1 block text-[11px] text-slate-400">New task</label>
+          <input id="add-task-title" type="text" class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none" placeholder="Title" />
+        </div>
+        <div class="flex-1">
+          <label class="mb-1 block text-[11px] text-slate-400">Description (optional)</label>
+          <input id="add-task-desc" type="text" class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none" placeholder="Short description" />
+        </div>
+        <button type="submit" class="mt-1 inline-flex items-center rounded-md bg-indigo-600 px-3 py-1 text-[11px] font-medium text-white hover:bg-indigo-500 md:mt-0">Add</button>
+      </form>
+    </section>
+
+    <section class="grid gap-3 md:grid-cols-3">
+      <div>
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Todo</h3>
+        <div id="col-todo" class="rounded-xl border border-slate-800 bg-slate-900/70 p-2 min-h-[120px]"></div>
+      </div>
+      <div>
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Doing</h3>
+        <div id="col-doing" class="rounded-xl border border-slate-800 bg-slate-900/70 p-2 min-h-[120px]"></div>
+      </div>
+      <div>
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Done</h3>
+        <div id="col-done" class="rounded-xl border border-slate-800 bg-slate-900/70 p-2 min-h-[120px]"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
