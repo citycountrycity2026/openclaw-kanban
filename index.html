@@ -11,50 +11,50 @@
       {
         id: "gateway-fix",
         title: "Fix OpenClaw gateway / sub-agent pairing",
-        description: "Diagnose and resolve gateway pairing error so sessions_spawn works reliably.",
-        details: "Run gateway status/doctor/logs, identify why sessions_spawn reports 'pairing required', and update config so sub-agents can be spawned reliably.",
+        description: "Gateway currently rejects sub-agent spawns with a pairing error.",
+        details: "Deep dive into OpenClaw gateway pairing: run gateway status, doctor, and logs to see why sessions_spawn fails, verify WebSocket binding on 127.0.0.1:18789, and adjust config or pairing settings so a minimal test sub-agent can spawn and respond successfully.",
         column: "todo"
       },
       {
         id: "supabase-setup",
         title: "Set up Supabase for knowledge + mood DB",
-        description: "Create Supabase project, tables (book_chapters, mood_log, etc.), and local supabase-kb skill.",
-        details: "Design schema for chapters, critiques, mood_log, and kanban tasks; create project and tables in Supabase; store service key locally; build a small supabase-kb client skill.",
+        description: "Supabase will be our single source of truth for knowledge, moods, and Kanban tasks.",
+        details: "Design a minimal but robust schema (book_meta, book_chapters, mood_log, kanban_tasks, kanban_subtasks), create a Supabase project, run the SQL to create tables, and store the service key in ~/.secrets/supabase.json. Then implement a supabase-kb skill that can insert/read chapters, moods, and tasks so agents can query and update state across sessions.",
         column: "todo"
       },
       {
         id: "book-agent",
         title: "Implement book-writing agent",
-        description: "Use BOOK_AGENT_PLAN.md to create the dedicated agent, cron jobs, and daily chapter workflow.",
-        details: "Create a dedicated book agent workspace, wire morning/midday/evening cron jobs, integrate mood + news inputs via Supabase, and ensure daily chapters are written, revised, and sent for review.",
+        description: "Turn the book-writing plan into a real agent that writes and refines one chapter per day.",
+        details: "Set up a separate workspace and agent configured specifically for long-form fiction, load BOOK_AGENT_PLAN.md as the blueprint, and wire three cron jobs (morning write, midday revision, evening mood conversation + finalization). Integrate Supabase for storing chapters, critiques, and moods, and ensure the agent sends you a daily chapter package after evening processing.",
         column: "todo"
       },
       {
         id: "tavily-setup",
         title: "Tavily search integration",
-        description: "Store Tavily API key and add tavily-search skill as default web search backend.",
-        details: "Create a tavily-search skill that reads ~/.secrets/tavily.json and calls the Tavily API for web queries, then start using it as the default search backend instead of Brave.",
+        description: "Replace the disabled Brave web_search with Tavily as a general web info source.",
+        details: "Create a tavily-search skill that loads the Tavily API key from ~/.secrets/tavily.json, sends structured search queries to Tavily, and returns concise result lists (title, URL, snippet). Update our own behavior to prefer Tavily for documentation lookups, research questions, and other web-type queries instead of the built-in Brave web_search tool.",
         column: "todo"
       },
       {
         id: "rapidapi-setup",
         title: "RapidAPI setup",
-        description: "Create RapidAPI account, store key, add generic rapidapi skill + flight/news wrappers.",
-        details: "Create RapidAPI account in browser, subscribe to a flight and a news API, store the key in ~/.secrets/rapidapi.json, then implement a generic rapidapi client and task-specific wrappers.",
+        description: "Use RapidAPI as a shared gateway for flight search and news APIs.",
+        details: "Sign up for RapidAPI in the browser, subscribe to at least one flight search API and one news API on free/cheap plans, and store the RapidAPI key in ~/.secrets/rapidapi.json. Build a generic rapidapi client skill that can call any RapidAPI host/endpoint and add thin wrappers (flight-search-rapidapi, news-rapidapi) that normalize responses into formats we can use for Miles&More calculations and mood analysis.",
         column: "todo"
       },
       {
         id: "robotics-investing",
         title: "Robotics + agentic AI investing plan",
-        description: "Design and (optionally) execute a small ~1000 € investment plan in robotics + agentic AI, with a core ETF and a few speculative names.",
-        details: "Research UCITS robotics/automation ETFs and a small set of individual robotics/AI names; split ~1000 € into a safer core+satellite structure that fits your risk tolerance.",
+        description: "Explore a small, themed portfolio around robotics + agentic AI from Germany.",
+        details: "Research UCITS robotics/automation ETFs available to a German retail investor and identify 2–3 specific tickers for a core position. Then shortlist a few individual robotics/AI names (e.g. warehouse automation, industrial autonomy, robotics platforms) for a high-risk satellite allocation. The goal is to split ~1000 € into a relatively secure ETF core plus 1–3 speculative positions that could benefit disproportionately from agentic AI in robotics.",
         column: "todo"
       },
       {
         id: "google-oauth-fix",
         title: "Fix Gmail/Drive OAuth integration",
-        description: "Create a new stable Google Cloud OAuth client, update ~/.secrets/google-oauth.json, and re-test gmail_send/drive_upload scripts.",
-        details: "In Google Cloud Console, create a new Desktop OAuth client, re-run the local OAuth flow with correct scopes, update ~/.secrets/google-oauth.json, and validate google_token.js + gmail_send.js + drive_upload.js.",
+        description: "Repair the broken Gmail/Drive integration so scripted mail and uploads work again.",
+        details: "In Google Cloud Console, create a fresh Desktop OAuth client for the dedicated Gmail account, configure the consent screen cleanly, and re-run the local OAuth flow with the scopes we actually need (gmail.modify, drive, calendar). Update ~/.secrets/google-oauth.json with the new client_id/client_secret/refresh_token and thoroughly re-test google_token.js, gmail_send.js, and drive_upload.js until both mail sending and Drive uploads behave reliably.",
         column: "todo"
       },
       {
