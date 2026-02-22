@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OpenClaw Kanban</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    // Initial task data (can be edited in this file; user changes persist via localStorage per browser).
+    // TODO: set these to your actual Supabase values before publishing
+    const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+    // Initial task data is only a fallback; main source is Supabase
     const INITIAL_TASKS = [
       {
         id: "gateway-fix",
@@ -75,24 +80,12 @@
       }
     ];
 
-    function loadTasks() {
-      try {
-        const stored = localStorage.getItem("openclaw-kanban-tasks");
-        if (!stored) return INITIAL_TASKS;
-        const parsed = JSON.parse(stored);
-        if (!Array.isArray(parsed)) return INITIAL_TASKS;
-        return parsed;
-      } catch {
-        return INITIAL_TASKS;
-      }
-    }
-
-    function saveTasks(tasks) {
-      localStorage.setItem("openclaw-kanban-tasks", JSON.stringify(tasks));
-    }
-
     function setupKanban() {
-      let tasks = loadTasks();
+      let tasks = [];
+
+      const supabase = window.supabase?.createClient
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+        : null;
 
       const columns = {
         todo: document.getElementById("col-todo"),
@@ -227,29 +220,35 @@
         });
       });
 
-      // Basic add-task form
-      const addForm = document.getElementById("add-task-form");
-      const addTitle = document.getElementById("add-task-title");
-      const addDesc = document.getElementById("add-task-desc");
+      // No add-task form (read-only dashboard)
 
-      addForm.addEventListener("submit", e => {
-        e.preventDefault();
-        const title = addTitle.value.trim();
-        if (!title) return;
-        const desc = addDesc.value.trim();
-        tasks.push({
-          id: `task-${Date.now()}`,
-          title,
-          description: desc,
-          column: "todo"
-        });
-        addTitle.value = "";
-        addDesc.value = "";
-        saveTasks(tasks);
+      async function loadFromSupabase() {
+        if (!supabase) {
+          // Fallback to INITIAL_TASKS if Supabase is not configured
+          tasks = INITIAL_TASKS.map(t => ({ ...t }));
+          render();
+          return;
+        }
+        const { data, error } = await supabase
+          .from('kanban_tasks')
+          .select('id, slug, title, description, details, status')
+          .order('created_at', { ascending: true });
+        if (error) {
+          console.error('Supabase error:', error.message);
+          tasks = INITIAL_TASKS.map(t => ({ ...t }));
+        } else {
+          tasks = (data || []).map(row => ({
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            details: row.details,
+            column: row.status || 'todo'
+          }));
+        }
         render();
-      });
+      }
 
-      render();
+      loadFromSupabase();
     }
 
     document.addEventListener("DOMContentLoaded", setupKanban);
@@ -281,7 +280,7 @@
     <section class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div>
         <h2 class="text-base font-semibold">Workspace tasks</h2>
-        <p class="text-xs text-slate-400">Click a card to move it between TODO → DOING → DONE. Tasks are saved locally in your browser.</p>
+        <p class="text-xs text-slate-400">Read-only dashboard: columns reflect task status from Supabase (todo / doing / done).</p>
       </div>
       <form id="add-task-form" class="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900/70 p-3 text-xs md:flex-row md:items-end">
         <div class="flex-1">
